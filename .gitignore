@@ -1,0 +1,7 @@
+vosk-model-small-ru-0.22/
+.agent/
+.agent-memory/
+_agent_core/
+__pycache__/
+*.pyc
+jarvis_config.json

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS | Agent Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030712;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.3);
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
+            color: var(--text);
+            margin: 0;
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-glow);
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--accent);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        .task-list,
+        .agent-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .task-item,
+        .agent-item {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .tag {
+            font-size: 10px;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-dim);
+        }
+
+        .tag-active {
+            background: rgba(56, 189, 248, 0.2);
+            color: var(--accent);
+        }
+
+        .tag-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 12px;
+            margin: 0;
+            white-space: pre-wrap;
+            color: #cbd5e1;
+            border-left: 3px solid var(--accent);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(56, 189, 248, 0.1);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loader" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">JARVIS CORE</div>
+            <div class="system-status">
+                <div class="pulse"></div>
+                SYSTEM ONLINE
+            </div>
+        </header>
+
+        <main class="grid">
+            <!-- Project Overview -->
+            <div class="card">
+                <h2>Project Information</h2>
+                <div class="stat-value" id="project-name">---</div>
+                <div class="stat-label">Last updated: <span id="last-update">---</span></div>
+            </div>
+
+            <!-- Stats -->
+            <div class="card">
+                <h2>Tasks Queue</h2>
+                <div style="display: flex; gap: 40px;">
+                    <div>
+                        <div class="stat-value" id="pending-count">0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="active-count" style="color: var(--accent);">0</div>
+                        <div class="stat-label">Active</div>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="completed-count" style="color: var(--success);">0</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Agents -->
+            <div class="card">
+                <h2>Active Agents</h2>
+                <ul class="agent-list" id="agent-list">
+                    <li class="agent-item" style="color: var(--text-dim);">No active agents found</li>
+                </ul>
+            </div>
+
+            <!-- Console Output -->
+            <div class="card">
+                <h2>Recent Operations</h2>
+                <pre id="recent-logs">Waiting for signal...</pre>
+            </div>
+        </main>
+    </div>
+
+    <!-- Data Injection -->
+    <script id="agent-data-script">
+        // Default placeholder data
+        window.JARVIS_DATA = {
+            project: { name: "Initializing...", lastSync: "---" },
+            stats: { pending: 0, active: 0, completed: 0 },
+            agents: [],
+            logs: ["System bootstrap started..."]
+        };
+    </script>
+
+    <!-- External Data Source -->
+    <script src="agent-data.js" onerror="console.log('agent-data.js not found yet')"></script>
+
+    <script>
+        function updateUI() {
+            const data = window.JARVIS_DATA;
+            if (!data) return;
+
+            document.getElementById('project-name').innerText = data.project.name;
+            document.getElementById('last-update').innerText = data.project.lastSync;
+            document.getElementById('pending-count').innerText = data.stats.pending;
+            document.getElementById('active-count').innerText = data.stats.active;
+            document.getElementById('completed-count').innerText = data.stats.completed;
+
+            const agentList = document.getElementById('agent-list');
+            if (data.agents && data.agents.length > 0) {
+                agentList.innerHTML = data.agents.map(a => `
+                    <li class="agent-item">
+                        <span><strong>${a.role}</strong> (${a.id})</span>
+                        <span class="tag tag-active">${a.status}</span>
+                    </li>
+                `).join('');
+            } else {
+                agentList.innerHTML = '<li class="agent-item" style="color: var(--text-dim);">No active agents found</li>';
+            }
+
+            const logPre = document.getElementById('recent-logs');
+            if (data.logs && data.logs.length > 0) {
+                logPre.innerText = data.logs.slice(-10).join('\n');
+            }
+
+            // Hide loader
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+            }, 500);
+        }
+
+        // Initial call
+        updateUI();
+
+        // Auto-refresh simulation (since we don't have a server, we just check window object)
+        setInterval(updateUI, 2000);
+    </script>
+</body>
+
+</html>
